@@ -40,7 +40,7 @@ if (cluster.isMaster) {
     });
 
     app.configure(function () {
-        var MemcachedStore = require('connect-memcached')(express);
+        var RedisStore = require('connect-redis')(express);
         app.set('port', process.env.PORT || 5000);
         app.set('view engine', 'ejs');
         app.use(partials());
@@ -55,9 +55,7 @@ if (cluster.isMaster) {
         app.use(express.session({
             secret: 'powawa',
             key: 'isucon_session',
-            store: new MemcachedStore({
-                hosts: [ 'localhost:11211' ]
-            })
+            store: new RedisStore({})
         }));
         app.use(function(req, res, next) {
             res.locals.mysql = mysql.createClient(config.database);
