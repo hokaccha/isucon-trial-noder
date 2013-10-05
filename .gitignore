@@ -1,0 +1,14 @@
+.bash_history
+.bash_logout
+.bash_profile
+.bashrc
+.kshrc
+.lesshst
+.ssh/
+.subversion/
+.vim/
+.viminfo
+.nodebrew/
+webapp/nodejs/node_modules
+webapp/ruby/vendor
+local/
