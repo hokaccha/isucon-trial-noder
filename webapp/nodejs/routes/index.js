@@ -200,18 +200,7 @@ exports.memo = function(req, res) {
                 return;
             }
             memo.content_html = html;
-            client.query(
-                'SELECT username FROM users WHERE id=?',
-                [ memo.user ],
-                cb
-            );
-        },
-        function(results, fields, cb) {
-            if (res.is_halt) {
-                cb();
-                return;
-            }
-            memo.username = results[0].username;
+            memo.username = global.users[memo.user];
 
             var cond;
             if (user && user.id == memo.user) {
