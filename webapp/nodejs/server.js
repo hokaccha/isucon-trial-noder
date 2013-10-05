@@ -16,10 +16,6 @@ global.users = {};
 
 
 if (cluster.isMaster) {
-    client = mysql.createConnection(config.database);
-    client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', function(err, result) {
-      redis_client.set("total_count", result[0].total, redis.print);
-    });
     for (var i = 0, childProcesses = []; i < workers; i++) {
         childProcesses[i] = cluster.fork();
     }
@@ -73,6 +69,10 @@ if (cluster.isMaster) {
         });
         app.use(function(req, res, next) {
           if (Object.keys(global.users).length === 0) {
+            var client = mysql.createConnection(config.database);
+            client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', function(err, result) {
+              redis_client.set("total_count", result[0].total, redis.print);
+            });
             res.locals.mysql.query('SELECT id, username FROM users', function(err, _users) {
               if (err) return nnext(err);
               _users.forEach(function(u) {
