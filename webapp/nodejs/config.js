@@ -6,7 +6,8 @@ module.exports = (function () {
             port: common.database.port,
             user: common.database.username,
             password: common.database.password,
-            database: common.database.dbname
+            database: common.database.dbname,
+            connectionLimit: 25
         }
     };
 }());
