@@ -12,13 +12,7 @@ exports.index = function(req, res) {
     var client = res.locals.mysql;
     async.series([
         function(cb) {
-            redis_client.get("total_count", function(err, reply) {
-              if (reply != "0") {
-                cb(err, reply);
-              } else {
-                client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
-              }
-            });
+            redis_client.get("total_count", cb);
         },
         function(cb) {
             client.query('SELECT * FROM memos WHERE is_private=0 ' +
@@ -26,12 +20,7 @@ exports.index = function(req, res) {
         }
     ], function(err, results) {
         if (err) { throw err; }
-        var total = results[0][0][0].total;
-        if (total == undefined) {
-          total = results[0];
-        } else {
-          redis_client.set("total_count", total, redis.print);
-        }
+        var total = results[0];
         var memos = results[1][0];
 
         memos.forEach(function(memo) {
@@ -55,13 +44,7 @@ exports.recent = function(req, res) {
 
     async.series([
         function(cb) {
-            redis_client.get("total_count", function(err, reply) {
-              if (reply != "0") {
-                cb(err, reply);
-              } else {
-                client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
-              }
-            });
+            redis_client.get("total_count", cb);
         },
         function(cb) {
             client.query('SELECT * FROM memos WHERE is_private=0 ' +
@@ -74,12 +57,7 @@ exports.recent = function(req, res) {
             res.halt(404);
             return;
         }
-        var total = results[0][0][0].total;
-        if (total == undefined) {
-          total = results[0];
-        } else {
-          redis_client.set("total_count", total, redis.print);
-        }
+        var total = results[0];
         var memos = results[1][0];
 
         memos.forEach(function(memo) {
@@ -182,12 +160,12 @@ exports.post_memo = function(req, res) {
         ],
         function(err, info) {
             if (err) { throw err; }
-            var memo_id = info.insertId;
-            res.locals.mysql.end();
-            res.redirect('/memo/' + memo_id);
             redis_client.incr("total_count", function(err){
               if (err) {
                 console.log(err);
+                var memo_id = info.insertId;
+                res.locals.mysql.end();
+                res.redirect('/memo/' + memo_id);
               }
             });
         }

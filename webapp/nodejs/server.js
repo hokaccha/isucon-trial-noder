@@ -15,9 +15,11 @@ global.users = {};
 
 
 
-redis_client.set("total_count", 0, redis.print);
 if (cluster.isMaster) {
-
+    client = mysql.createConnection(config.database);
+    client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', function(err, result) {
+      redis_client.set("total_count", result[0].total, redis.print);
+    });
     for (var i = 0, childProcesses = []; i < workers; i++) {
         childProcesses[i] = cluster.fork();
     }
