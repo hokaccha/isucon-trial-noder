@@ -1,5 +1,6 @@
 var express = require('express');
 var http    = require('http');
+var fs    = require('fs');
 var path    = require('path');
 var cluster = require('cluster');
 var mysql   = require('mysql');
@@ -8,6 +9,8 @@ var routes  = require('./routes');
 var config  = require('./config');
 var partials = require('express-partials');
 var workers = 5;
+var logpath = "./node_log.log";
+var logstream = fs.createWriteStream(logpath, {flags : 'w', encoding : null, mode : 0666});
 
 if (cluster.isMaster) {
 
@@ -36,7 +39,7 @@ if (cluster.isMaster) {
     var app = express();
 
     app.configure('development', function () {
-        app.use(express.logger('dev'));
+        app.use(express.logger({ format: 'dev', stream: logstream}));
         app.use(express.errorHandler());
     });
 
