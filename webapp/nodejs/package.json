@@ -13,7 +13,7 @@
     "express-partials": "0.1.1",
     "ejs": "0.8.4",
     "mysql": "0.9.6",
-    "connect-memcached": "0.0.6",
+    "connect-redis": "1.4.5",
     "crypto": "0.0.3",
     "async": "0.2.9",
     "temp": "0.6.0"
