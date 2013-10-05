@@ -1,28 +1,8 @@
-
 var config  = require('../config');
 var filters = require('../filters');
 var async   = require('async');
 var crypto  = require('crypto');
-var temp    = require('temp');
-var fs      = require('fs');
-var exec    = require('child_process').exec;
-
-function markdown(body, callback) {
-    temp.open('mdfile', function(err, info) {
-        fs.write(info.fd, body);
-        fs.close(info.fd, function(err) {
-            exec('../bin/markdown ' + info.path, function(err, stdout) {
-                var result = stdout;
-                fs.unlink(info.path, function(err) {
-                    if (err) { throw err; }
-                    process.nextTick(function(){
-                        callback(null, result);
-                    });
-                });
-            });
-        });
-    });
-};
+var marked    = require('marked');
 
 exports.index = function(req, res) {
     if (res.is_halt) { return; }
@@ -220,7 +200,7 @@ exports.memo = function(req, res) {
                 }
             }
 
-            markdown(memo.content, cb);
+            cb(null, marked(memo.content));
         },
         function(html, cb) {
             if (res.is_halt) {
