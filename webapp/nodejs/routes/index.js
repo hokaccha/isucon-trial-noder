@@ -7,67 +7,34 @@ var marked    = require('marked');
 exports.index = function(req, res) {
     if (res.is_halt) { return; }
 
-    var client = res.locals.mysql;
-    async.series([
-        function(cb) {
-            client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
-        },
-        function(cb) {
-            client.query('SELECT * FROM memos WHERE is_private=0 ' +
-                         'ORDER BY created_at DESC, id DESC LIMIT 100', cb);
-        }
-    ], function(err, results) {
-        if (err) { throw err; }
-        var total = results[0][0][0].total;
-        var memos = results[1][0];
-
-        memos.forEach(function(memo) {
-          memo.username = global.users[memo.id];
-        });
-
-        res.locals.mysql.release();
-        res.render('index.ejs', {
-            memos: memos,
-            page:  0,
-            total: total
-        });
+    var memos = global.memos.slice(0, 100);
+    memos.forEach(function(memo) {
+      memo.username = global.users[memo.user];
     });
-}
+
+    res.locals.mysql.release();
+    res.render('index.ejs', {
+        memos: memos,
+        page:  0,
+        total: global.memos.length
+    });
+};
 
 exports.recent = function(req, res) {
     if (res.is_halt) { return; }
 
-    var client = res.locals.mysql;
     var page = req.params.page;
 
-    async.series([
-        function(cb) {
-            client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
-        },
-        function(cb) {
-            client.query('SELECT * FROM memos WHERE is_private=0 ' +
-                         'ORDER BY created_at DESC, id DESC LIMIT 100 OFFSET ?',
-                         [ page * 100 ], cb);
-        }
-    ], function(err, results) {
-        if (err) { throw err; }
-        if (results[0].length == 0) {
-            res.halt(404);
-            return;
-        }
-        var total = results[0][0][0].total;
-        var memos = results[1][0];
+    var memos = global.memos.slice(page * 100, page * 100 + 100);
+    memos.forEach(function(memo) {
+      memo.username = global.users[memo.user];
+    });
 
-        memos.forEach(function(memo) {
-          memo.username = global.users[memo.id];
-        });
-
-        res.locals.mysql.release();
-        res.render('index.ejs', {
-            memos: memos,
-            page:  page,
-            total: total
-        });
+    res.locals.mysql.release();
+    res.render('index.ejs', {
+        memos: memos,
+        page:  0,
+        total: global.memos.length
     });
 };
 
@@ -159,8 +126,13 @@ exports.post_memo = function(req, res) {
         function(err, info) {
             if (err) { throw err; }
             var memo_id = info.insertId;
-            res.locals.mysql.release();
-            res.redirect('/memo/' + memo_id);
+            client.query('select * from memos where id=?', [memo_id], function(err, memo) {
+              if (memo[0].is_private === 0) {
+                global.memos.unshift(memo[0]);
+              }
+              res.locals.mysql.release();
+              res.redirect('/memo/' + memo_id);
+            });
         }
     );
 };

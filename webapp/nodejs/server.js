@@ -7,9 +7,10 @@ var filters = require('./filters');
 var routes  = require('./routes');
 var config  = require('./config');
 var partials = require('express-partials');
-var workers = 5;
+var workers = 1;
 
 global.users = {};
+global.memos = {};
 
 if (cluster.isMaster) {
 
@@ -68,9 +69,22 @@ if (cluster.isMaster) {
             });
         });
         app.use(function(req, res, next) {
+          
+          if (Object.keys(global.memos).length === 0) {
+            res.locals.mysql.query('SELECT * FROM memos WHERE is_private=0 ORDER BY created_at DESC', function(err, _memos) {
+              if (err) return next(err);
+              global.memos = _memos;
+              next();
+            });
+          }
+          else {
+            next();
+          }
+        });
+        app.use(function(req, res, next) {
           if (Object.keys(global.users).length === 0) {
             res.locals.mysql.query('SELECT id, username FROM users', function(err, _users) {
-              if (err) return nnext(err);
+              if (err) return next(err);
               _users.forEach(function(u) {
                 users[u.id] = u.username;
               });
