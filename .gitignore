@@ -8,6 +8,8 @@
 .subversion/
 .vim/
 .viminfo
+.npm/
+.mysql_history
 .nodebrew/
 webapp/nodejs/node_modules
 webapp/ruby/vendor
