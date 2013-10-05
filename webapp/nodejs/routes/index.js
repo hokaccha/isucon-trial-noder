@@ -13,7 +13,7 @@ exports.index = function(req, res) {
     async.series([
         function(cb) {
             redis_client.get("total_count", function(err, reply) {
-              if (reply) {
+              if (reply != "0") {
                 cb(err, reply);
               } else {
                 client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
@@ -29,8 +29,9 @@ exports.index = function(req, res) {
         var total = results[0][0][0].total;
         if (total == undefined) {
           total = results[0];
+        } else {
+          redis_client.set("total_count", total, redis.print);
         }
-        redis_client.set("total_count", total, redis.print);
         var memos = results[1][0];
 
         memos.forEach(function(memo) {
@@ -55,7 +56,7 @@ exports.recent = function(req, res) {
     async.series([
         function(cb) {
             redis_client.get("total_count", function(err, reply) {
-              if (reply) {
+              if (reply != "0") {
                 cb(err, reply);
               } else {
                 client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
@@ -76,8 +77,9 @@ exports.recent = function(req, res) {
         var total = results[0][0][0].total;
         if (total == undefined) {
           total = results[0];
+        } else {
+          redis_client.set("total_count", total, redis.print);
         }
-        redis_client.set("total_count", total, redis.print);
         var memos = results[1][0];
 
         memos.forEach(function(memo) {
@@ -183,7 +185,11 @@ exports.post_memo = function(req, res) {
             var memo_id = info.insertId;
             res.locals.mysql.end();
             res.redirect('/memo/' + memo_id);
-            redis_client.del("total_count", redis.print);
+            redis_client.incr("total_count", function(err){
+              if (err) {
+                console.log(err);
+              }
+            });
         }
     );
 };

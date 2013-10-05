@@ -7,10 +7,15 @@ var filters = require('./filters');
 var routes  = require('./routes');
 var config  = require('./config');
 var partials = require('express-partials');
+var redis = require("redis");
+var redis_client = redis.createClient();
 var workers = 5;
 
 global.users = {};
 
+
+
+redis_client.set("total_count", 0, redis.print);
 if (cluster.isMaster) {
 
     for (var i = 0, childProcesses = []; i < workers; i++) {
