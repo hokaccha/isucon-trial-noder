@@ -7,10 +7,11 @@ var filters = require('./filters');
 var routes  = require('./routes');
 var config  = require('./config');
 var partials = require('express-partials');
+var workers = 5;
 
 if (cluster.isMaster) {
 
-    for (var i = 0, childProcesses = []; i < 2; i++) {
+    for (var i = 0, childProcesses = []; i < workers; i++) {
         childProcesses[i] = cluster.fork();
     }
 
@@ -105,5 +106,9 @@ if (cluster.isMaster) {
 
     http.createServer(app).listen(app.get('port'), function () {
         console.log("Express server listening on port " + app.get('port'));
+    });
+    
+    process.on('uncaughtException', function(err) {
+      console.log(err);
     });
 }
