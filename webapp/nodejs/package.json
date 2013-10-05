@@ -12,7 +12,7 @@
     "express": "3.4.0",
     "express-partials": "0.1.1",
     "ejs": "0.8.4",
-    "mysql": "0.9.6",
+    "mysql": "2.0.0-alpha9",
     "connect-redis": "1.4.5",
     "crypto": "0.0.3",
     "async": "0.2.9",
