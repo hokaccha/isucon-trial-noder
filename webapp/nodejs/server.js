@@ -59,7 +59,7 @@ if (cluster.isMaster) {
             store: new RedisStore({})
         }));
         app.use(function(req, res, next) {
-            res.locals.mysql = mysql.createClient(config.database);
+            res.locals.mysql = mysql.createConnection(config.database);
             next();
         });
         app.use(function(req, res, next) {
