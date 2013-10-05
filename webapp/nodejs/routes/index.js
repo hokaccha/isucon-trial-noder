@@ -10,7 +10,7 @@ exports.index = function(req, res) {
     if (res.is_halt) { return; }
 
     var client = res.locals.mysql;
-    async.series([
+    async.parallel([
         function(cb) {
             redis_client.get("total_count", cb);
         },
@@ -42,7 +42,7 @@ exports.recent = function(req, res) {
     var client = res.locals.mysql;
     var page = req.params.page;
 
-    async.series([
+    async.parallel([
         function(cb) {
             redis_client.get("total_count", cb);
         },
