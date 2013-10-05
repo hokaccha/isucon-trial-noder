@@ -3,6 +3,8 @@ var filters = require('../filters');
 var async   = require('async');
 var crypto  = require('crypto');
 var marked    = require('marked');
+var redis = require("redis");
+var redis_client = redis.createClient();
 
 exports.index = function(req, res) {
     if (res.is_halt) { return; }
@@ -10,7 +12,13 @@ exports.index = function(req, res) {
     var client = res.locals.mysql;
     async.series([
         function(cb) {
-            client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
+            redis_client.get("total_count", function(err, reply) {
+              if (reply) {
+                cb(err, reply);
+              } else {
+                client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
+              }
+            });
         },
         function(cb) {
             client.query('SELECT * FROM memos WHERE is_private=0 ' +
@@ -19,6 +27,10 @@ exports.index = function(req, res) {
     ], function(err, results) {
         if (err) { throw err; }
         var total = results[0][0][0].total;
+        if (total == undefined) {
+          total = results[0];
+        }
+        redis_client.set("total_count", total, redis.print);
         var memos = results[1][0];
         async.mapSeries(memos, function(memo, cb) {
             client.query('SELECT username FROM users WHERE id=?', [ memo.user ], cb);
@@ -46,7 +58,13 @@ exports.recent = function(req, res) {
 
     async.series([
         function(cb) {
-            client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
+            redis_client.get("total_count", function(err, reply) {
+              if (reply) {
+                cb(err, reply);
+              } else {
+                client.query('SELECT count(*) AS total FROM memos WHERE is_private=0', cb);
+              }
+            });
         },
         function(cb) {
             client.query('SELECT * FROM memos WHERE is_private=0 ' +
@@ -60,6 +78,10 @@ exports.recent = function(req, res) {
             return;
         }
         var total = results[0][0][0].total;
+        if (total == undefined) {
+          total = results[0];
+        }
+        redis_client.set("total_count", total, redis.print);
         var memos = results[1][0];
         async.mapSeries(memos, function(memo, cb) {
             client.query('SELECT username FROM users WHERE id=?', [ memo.user ], cb);
@@ -169,6 +191,7 @@ exports.post_memo = function(req, res) {
             var memo_id = info.insertId;
             res.locals.mysql.end();
             res.redirect('/memo/' + memo_id);
+            redis_client.del("total_count", redis.print);
         }
     );
 };
