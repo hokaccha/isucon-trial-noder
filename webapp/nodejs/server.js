@@ -9,6 +9,8 @@ var config  = require('./config');
 var partials = require('express-partials');
 var workers = 5;
 
+global.users = {};
+
 if (cluster.isMaster) {
 
     for (var i = 0, childProcesses = []; i < workers; i++) {
@@ -61,6 +63,20 @@ if (cluster.isMaster) {
         app.use(function(req, res, next) {
             res.locals.mysql = mysql.createConnection(config.database);
             next();
+        });
+        app.use(function(req, res, next) {
+          if (Object.keys(global.users).length === 0) {
+            res.locals.mysql.query('SELECT id, username FROM users', function(err, _users) {
+              if (err) return nnext(err);
+              _users.forEach(function(u) {
+                users[u.id] = u.username;
+              });
+              next();
+            });
+          }
+          else {
+            next();
+          }
         });
         app.use(function(req, res, next) {
             res.locals.uri_for = function(path) {
