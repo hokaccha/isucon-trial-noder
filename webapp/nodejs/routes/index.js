@@ -162,7 +162,6 @@ exports.post_memo = function(req, res) {
             if (err) { throw err; }
             redis_client.incr("total_count", function(err){
               if (err) { throw err; }
-              console.log(err);
               var memo_id = info.insertId;
               res.locals.mysql.end();
               res.redirect('/memo/' + memo_id);
