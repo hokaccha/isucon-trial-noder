@@ -20,20 +20,16 @@ exports.index = function(req, res) {
         if (err) { throw err; }
         var total = results[0][0][0].total;
         var memos = results[1][0];
-        async.mapSeries(memos, function(memo, cb) {
-            client.query('SELECT username FROM users WHERE id=?', [ memo.user ], cb);
-        }, function (err, results) {
-             if (err) { throw err; }
-             results.forEach(function(e, i) {
-                 memos[i].username = e[0].username;
-             });
 
-             res.locals.mysql.end();
-             res.render('index.ejs', {
-                 memos: memos,
-                 page:  0,
-                 total: total
-             });
+        memos.forEach(function(memo) {
+          memo.username = global.users[memo.id];
+        });
+
+        res.locals.mysql.end();
+        res.render('index.ejs', {
+            memos: memos,
+            page:  0,
+            total: total
         });
     });
 }
@@ -61,20 +57,16 @@ exports.recent = function(req, res) {
         }
         var total = results[0][0][0].total;
         var memos = results[1][0];
-        async.mapSeries(memos, function(memo, cb) {
-            client.query('SELECT username FROM users WHERE id=?', [ memo.user ], cb);
-        }, function (err, results) {
-             if (err) { throw err; }
-             results.forEach(function(e, i) {
-                 memos[i].username = e.username;
-             });
 
-             res.locals.mysql.end();
-             res.render('index.ejs', {
-                 memos: memos,
-                 page:  page,
-                 total: total
-             });
+        memos.forEach(function(memo) {
+          memo.username = global.users[memo.id];
+        });
+
+        res.locals.mysql.end();
+        res.render('index.ejs', {
+            memos: memos,
+            page:  page,
+            total: total
         });
     });
 };
