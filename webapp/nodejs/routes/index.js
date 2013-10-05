@@ -25,7 +25,7 @@ exports.index = function(req, res) {
           memo.username = global.users[memo.id];
         });
 
-        res.locals.mysql.end();
+        res.locals.mysql.release();
         res.render('index.ejs', {
             memos: memos,
             page:  0,
@@ -62,7 +62,7 @@ exports.recent = function(req, res) {
           memo.username = global.users[memo.id];
         });
 
-        res.locals.mysql.end();
+        res.locals.mysql.release();
         res.render('index.ejs', {
             memos: memos,
             page:  page,
@@ -74,7 +74,7 @@ exports.recent = function(req, res) {
 exports.signin = function(req, res) {
     if (res.is_halt) { return; }
 
-    res.locals.mysql.end();
+    res.locals.mysql.release();
     res.render('signin.ejs');
 };
 
@@ -82,7 +82,7 @@ exports.signout = function(req, res) {
     if (res.is_halt) { return; }
 
     req.session.user_id = null;
-    res.locals.mysql.end();
+    res.locals.mysql.release();
     res.cookie('isucon_session', '', { expires: new Date(Date.now() - 10), httpOnly: true });
     res.redirect('/');
 };
@@ -115,14 +115,14 @@ exports.request_signin = function(req, res) {
                             [ user.id ],
                             function(err, results) {
                                 if (err) { throw err; }
-                                res.locals.mysql.end();
+                                res.locals.mysql.release();
                                 res.redirect('/mypage');
                             }
                         );
                     });
                });
             } else {
-                res.locals.mysql.end();
+                res.locals.mysql.release();
                 res.redirect('/signin');
             }
         }
@@ -139,7 +139,7 @@ exports.mypage = function(req, res) {
         [ res.locals.user.id ],
         function(err, results) {
             if (err) { throw err; }
-            res.locals.mysql.end();
+            res.locals.mysql.release();
             res.render('mypage.ejs', { memos: results });
         }
     );
@@ -159,7 +159,7 @@ exports.post_memo = function(req, res) {
         function(err, info) {
             if (err) { throw err; }
             var memo_id = info.insertId;
-            res.locals.mysql.end();
+            res.locals.mysql.release();
             res.redirect('/memo/' + memo_id);
         }
     );
@@ -237,7 +237,7 @@ exports.memo = function(req, res) {
             });
 
 
-            res.locals.mysql.end();
+            res.locals.mysql.release();
             res.render('memo.ejs', {
                 memo:  memo,
                 older: older,

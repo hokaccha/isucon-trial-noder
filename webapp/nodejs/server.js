@@ -44,6 +44,7 @@ if (cluster.isMaster) {
 
     app.configure(function () {
         var RedisStore = require('connect-redis')(express);
+        var pool = mysql.createPool(config.database);
         app.set('port', process.env.PORT || 5000);
         app.set('view engine', 'ejs');
         app.use(partials());
@@ -61,8 +62,10 @@ if (cluster.isMaster) {
             store: new RedisStore({})
         }));
         app.use(function(req, res, next) {
-            res.locals.mysql = mysql.createConnection(config.database);
-            next();
+            pool.getConnection(function(err, connection) {
+              res.locals.mysql = connection;
+              next();
+            });
         });
         app.use(function(req, res, next) {
           if (Object.keys(global.users).length === 0) {
@@ -91,7 +94,7 @@ if (cluster.isMaster) {
         app.use(function(req, res, next) {
             res.is_halt = false;
             res.halt = function(status) {
-                res.locals.mysql.end();
+                res.locals.mysql.release();
                 res.is_halt = true;
                 res.send(status);
             };
